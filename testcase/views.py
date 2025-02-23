@@ -23,11 +23,18 @@ def index(request):
         for provider_id, config in LLM_PROVIDERS.items()
     ]
     
+    # 打印 llm_providers 的内容
+    print("LLM Providers:", llm_providers)
+    
     context = {
         'llm_providers': llm_providers,
         'testcases': [],  # 你的测试用例列表
         'prompt_templates': []  # 你的提示词模板列表
     }
+    
+    # 打印整个 context
+    print("Context:", context)
+    
     return render(request, 'testcase/index.html', context)
 
 @csrf_exempt

@@ -5,6 +5,7 @@ from ..config.settings import LLM_PROVIDERS
 from .prompts import BasePrompt, TestCasePrompt, BugReportPrompt
 import json
 import re
+import os
 
 class LLMService:
     """统一的 LLM 服务类"""
@@ -52,6 +53,8 @@ class LLMService:
                 response = self._chat_openai(client, full_messages, model_name)
             elif provider_config["name"] == "deepseek":
                 response = self._chat_deepseek(client, full_messages, model_name)
+            elif provider_config["name"] == "qwen":
+                response = self._chat_qwen(client, full_messages, model_name)
             else:
                 raise ValueError(f"不支持的提供商: {provider_config['name']}")
             
@@ -106,17 +109,20 @@ class LLMService:
         """获取或创建API客户端"""
         provider_name = provider_config["name"]
         if provider_name not in self._clients:
+            # 尝试从环境变量获取 api_key，如果没有则使用配置文件中的值
+            api_key = os.getenv(f"{provider_name.upper()}_API_KEY") or provider_config["api_key"]
+            
             if provider_name == "openai":
                 self._clients[provider_name] = OpenAI(
-                    api_key=provider_config["api_key"],
+                    api_key=api_key,
                     base_url=provider_config["base_url"]
                 )
-            elif provider_name == "deepseek":
+            elif provider_name in ["deepseek", "qwen"]:
                 self._clients[provider_name] = {
-                    "api_key": provider_config["api_key"],
+                    "api_key": api_key,
                     "base_url": provider_config["base_url"],
                     "headers": {
-                        "Authorization": f"Bearer {provider_config['api_key']}",
+                        "Authorization": f"Bearer {api_key}",
                         "Content-Type": "application/json"
                     }
                 }
@@ -159,6 +165,46 @@ class LLMService:
                 
             response_data = response.json()
             return response_data["choices"][0]["message"]["content"]
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Request error: {str(e)}")
+            raise
+        except (KeyError, IndexError) as e:
+            print(f"Response parsing error: {str(e)}")
+            raise
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
+            raise
+
+    def _chat_qwen(self, client: Dict, messages: List[Dict[str, str]], model: str) -> str:
+        """调用 Qwen API"""
+        try:
+            url = f"{client['base_url']}/chat/completions"
+            print(f"Calling Qwen API: {url}")  # 打印请求URL
+            
+            request_data = {
+                "model": model,
+                "messages": messages
+            }
+            print(f"Request data: {json.dumps(request_data, indent=2, ensure_ascii=False)}")  # 打印请求数据
+            
+            response = requests.post(
+                url,
+                headers=client["headers"],
+                json=request_data,
+                timeout=30
+            )
+            
+            print(f"Qwen API response status: {response.status_code}")  # 打印响应状态码
+            print(f"Qwen API response: {response.text}")  # 打印完整响应
+            
+            if response.status_code != 200:
+                raise ValueError(f"API错误: {response.status_code} - {response.text}")
+                
+            response_data = response.json()
+            result = response_data["choices"][0]["message"]["content"]
+            print(f"Extracted content: {result}")  # 打印提取的内容
+            return result
             
         except requests.exceptions.RequestException as e:
             print(f"Request error: {str(e)}")

@@ -14,7 +14,7 @@
                     <label for="llmProvider">选择大模型</label>
                     <select class="form-control" id="llmProvider" required>
                         {% for provider in llm_providers %}
-                        <option value="{{ provider.id }}">{{ provider.name }}</option>
+                        <option value="{{ provider.id }}" {% if provider.name == 'deepseek' %}selected{% endif %}>{{ provider.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -54,15 +54,18 @@
                         <td>{{ testcase.name }}</td>
                         <td>{{ testcase.steps }}</td>
                         <td>{{ testcase.expected_results }}</td>
-                        <td>
+                        <td class="text-end">
                             <a href="{% url 'edit_testcase' testcase.id %}" class="btn btn-sm btn-primary">编辑</a>
-                            <button class="btn btn-sm btn-danger delete-testcase"
-                                data-id="{{ testcase.id }}">删除</button>
+                            <button class="btn btn-sm btn-danger delete-testcase" data-id="{{ testcase.id }}">删除</button>
+                            <button class="btn btn-sm btn-success save-single-testcase" data-id="{{ testcase.id }}">仅保存该条</button>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="mt-3 d-flex justify-content-end">
+                <button class="btn btn-primary save-all-testcases">全部保存</button>
+            </div>
         </div>
     </div>
 </div>
@@ -104,9 +107,10 @@
                         <td>${testcase.name}</td>
                         <td>${testcase.steps.join('<br>')}</td>
                         <td>${testcase.expected_results.join('<br>')}</td>
-                        <td>
+                        <td class="text-end">
                             <button class="btn btn-sm btn-primary">编辑</button>
                             <button class="btn btn-sm btn-danger">删除</button>
+                            <button class="btn btn-sm btn-success save-single-testcase" data-id="${testcase.id}">仅保存该条</button>
                         </td>
                     `;
                         tbody.appendChild(row);
@@ -146,6 +150,29 @@
             const testcaseId = $(this).data('id');
             $.post(`/testcase/delete/${testcaseId}/`, function () {
                 location.reload();
+            });
+        }
+    });
+
+    // 处理单条测试用例保存
+    $('.save-single-testcase').click(function() {
+        const testcaseId = $(this).data('id');
+        if (confirm('确定要保存这条测试用例吗？')) {
+            $.post(`/testcase/save/${testcaseId}/`, function() {
+                alert('保存成功！');
+            }).fail(function(error) {
+                alert('保存失败：' + error.responseText);
+            });
+        }
+    });
+
+    // 处理全部测试用例保存
+    $('.save-all-testcases').click(function() {
+        if (confirm('确定要保存所有测试用例吗？')) {
+            $.post('/testcase/save-all/', function() {
+                alert('保存成功！');
+            }).fail(function(error) {
+                alert('保存失败：' + error.responseText);
             });
         }
     });
