@@ -1,0 +1,4 @@
+django
+openai
+langchain_openai
+langchain_community

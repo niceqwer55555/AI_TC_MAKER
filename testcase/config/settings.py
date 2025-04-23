@@ -2,15 +2,15 @@
 LLM_PROVIDERS = {
     "openai": {
         "name": "openai",
-        "api_key": "your-openai-api-key",
-        "base_url": "https://api.openai.com/v1",
-        "models": ["gpt-3.5-turbo", "gpt-4"]
+        "api_key": "sk-09xb54w68BfJ3b2rCb5108F46f98414990578fBf3f5e7aBa",
+        "base_url": "http://10.17.18.162:3001/v1",
+        "models": ["coder"]
     },
     "deepseek": {
         "name": "deepseek", 
-        "api_key": "",  # 替换为你的 DeepSeek API 密钥
-        "base_url": "https://api.deepseek.com/v1",  # 修正的 DeepSeek API 地址
-        "models": ["deepseek-chat"]
+        "api_key": "sk-09xb54w68BfJ3b2rCb5108F46f98414990578fBf3f5e7aBa",  # 替换为你的 DeepSeek API 密钥
+        "base_url": "http://10.17.18.162:3001/v1",  # 修正的 DeepSeek API 地址
+        "models": ["coder"]
     },
     "qwen": {
         "name": "qwen",
@@ -22,7 +22,7 @@ LLM_PROVIDERS = {
 
 # 提供商默认模型映射
 DEFAULT_MODELS = {
-    "deepseek": "deepseek-chat",
-    "openai": "gpt-3.5-turbo",
+    "deepseek": "coder",
+    "openai": "coder",
     "qwen": "qwen-plus"
 } 
